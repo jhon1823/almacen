@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventario de Almacén</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin: 0;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .tab.active {
+            border-bottom: 3px solid #4CAF50;
+            font-weight: bold;
+        }
+        .tab:hover {
+            background-color: #f9f9f9;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .search-container {
+            margin-bottom: 20px;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        .actions button {
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+        .btn-edit {
+            background-color: #2196F3;
+        }
+        .btn-delete {
+            background-color: #f44336;
+        }
+        .warehouse-display {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        .shelf {
+            margin: 0 20px 30px;
+            text-align: center;
+        }
+        .shelf-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .shelf-grid {
+            display: grid;
+            border: 2px solid #333;
+        }
+        .estanteria-a .shelf-grid {
+            grid-template-rows: repeat(4, 80px);
+            grid-template-columns: repeat(3, 100px);
+        }
+        .estanteria-b .shelf-grid, 
+        .estanteria-c .shelf-grid, 
+        .estanteria-d .shelf-grid,
+        .estanteria-e .shelf-grid,
+        .estanteria-f .shelf-grid,
+        .estanteria-g .shelf-grid {
+            grid-template-rows: repeat(3, 80px);
+            grid-template-columns: repeat(3, 100px);
+        }
+        .shelf-location {
+            border: 1px solid #999;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f9f9f9;
+            transition: background-color 0.3s;
+            overflow: hidden;
+            font-size: 12px;
+        }
+        .shelf-location:hover {
+            background-color: #e9e9e9;
+            cursor: pointer;
+        }
+        .shelf-location.occupied {
+            background-color: #d5f5d5;
+        }
+        .shelf-location.multiple {
+            background-color: #b7e1b7;
+        }
+        .small-text {
+            font-size: 10px;
+            color: #666;
+            margin-top: 3px;
+        }
+        #modalOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .close-btn {
+            font-size: 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #333;
+        }
+        .flex-row {
+            display: flex;
+            gap: 10px;
+        }
+        .flex-row > div {
+            flex: 1;
+        }
+        .btn-success {
+            background-color: #4CAF50;
+        }
+        .btn-warning {
+            background-color: #ff9800;
+        }
+        .stats-card {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .stats-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .stats-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .product-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 5px;
+        }
+        .product-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            padding: 5px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 4px;
+            background-color: #e0e0e0;
+            font-size: 10px;
+            margin-right: 5px;
+            margin-bottom: 3px;
+        }
+        .batch-import {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        #bulkSearchResults {
+            margin-top: 20px;
+        }
+        .shelf-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .shelf-selector button {
+            padding: 8px 12px;
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        .shelf-selector button.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Inventario de Almacén</h1>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="visual">Vista de Estanterías</div>
+            <div class="tab" data-tab="list">Lista de Inventario</div>
+            <div class="tab" data-tab="add">Agregar Producto</div>
+            <div class="tab" data-tab="search">Buscador Avanzado</div>
+            <div class="tab" data-tab="stats">Estadísticas</div>
+        </div>
+        
+        <div id="visual" class="tab-content active">
+            <div class="shelf-selector">
+                <button class="active" data-shelf-group="1">A-D</button>
+                <button data-shelf-group="2">E-G</button>
+            </div>
+
+            <div id="shelf-group-1" class="warehouse-display">
+                <div class="shelf estanteria-a">
+                    <div class="shelf-title">Estantería A (4 pisos x 3 columnas)</div>
+                    <div class="shelf-grid" id="estanteria-a"></div>
+                </div>
+                
+                <div class="shelf estanteria-b">
+                    <div class="shelf-title">Estantería B (3 pisos x 3 columnas)</div>
+                    <div class="shelf-grid" id="estanteria-b"></div>
+                </div>
+                
+                <div class="shelf estanteria-c">
+                    <div class="shelf-title">Estantería C (3 pisos x 3 columnas)</div>
+                    <div class="shelf-grid" id="estanteria-c"></div>
+                </div>
+                
+                <div class="shelf estanteria-d">
+                    <div class="shelf-title">Estantería D (3 pisos x 3 columnas)</div>
+                    <div class="shelf-grid" id="estanteria-d"></div>
+                </div>
+            </div>
+
+            <div id="shelf-group-2" class="warehouse-display" style="display: none;">
+                <div class="shelf estanteria-e">
+                    <div class="shelf-title">Estantería E (3 pisos x 3 columnas)</div>
+                    <div class="shelf-grid" id="estanteria-e"></div>
+                </div>
+                
+                <div class="shelf estanteria-f">
+                    <div class="shelf-title">Estantería F (3 pisos x 3 columnas)</div>
+                    <div class="shelf-grid" id="estanteria-f"></div>
+                </div>
+                
+                <div class="shelf estanteria-g">
+                    <div class="shelf-title">Estantería G (3 pisos x 3 columnas)</div>
+                    <div class="shelf-grid" id="estanteria-g"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="list" class="tab-content">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Buscar por nombre, marca o ubicación...">
+                <button onclick="searchInventory()">Buscar</button>
+            </div>
+            
+            <table id="inventoryTable">
+                <thead>
+                    <tr>
+                        <th>Ubicación</th>
+                        <th>Artículos</th>
+                        <th>Total Unidades</th>
+                        <th>Última Actualización</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    <!-- Los datos se cargarán dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="add" class="tab-content">
+            <h2>Agregar Nuevo Producto</h2>
+            <form id="addProductForm">
+                <div class="flex-row">
+                    <div class="form-group">
+                        <label for="estanteria">Estantería:</label>
+                        <select id="estanteria" required>
+                            <option value="A">A (4 pisos x 3 columnas)</option>
+                            <option value="B">B (3 pisos x 3 columnas)</option>
+                            <option value="C">C (3 pisos x 3 columnas)</option>
+                            <option value="D">D (3 pisos x 3 columnas)</option>
+                            <option value="E">E (3 pisos x 3 columnas)</option>
+                            <option value="F">F (3 pisos x 3 columnas)</option>
+                            <option value="G">G (3 pisos x 3 columnas)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="piso">Piso:</label>
+                        <select id="piso" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4 (Solo estantería A)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="columna">Columna:</label>
+                        <select id="columna" required>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="articulo">Nombre del Artículo:</label>
+                    <input type="text" id="articulo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="marca">Marca:</label>
+                    <input type="text" id="marca" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cantidad">Cantidad:</label>
+                    <input type="number" id="cantidad" min="1" value="1" required>
+                </div>
+                
+                <button type="submit" class="btn-success">Agregar Producto</button>
+            </form>
+        </div>
+
+        <div id="search" class="tab-content">
+            <h2>Buscador Avanzado</h2>
+            
+            <div class="form-group">
+                <label for="searchType">Tipo de búsqueda:</label>
+                <select id="searchType">
+                    <option value="simple">Búsqueda Simple</option>
+                    <option value="multiple">Búsqueda de Múltiples Productos</option>
+                </select>
+            </div>
+
+            <div id="simpleSearchSection">
+                <div class="form-group">
+                    <label for="simpleSearchTerm">Término de búsqueda:</label>
+                    <input type="text" id="simpleSearchTerm" placeholder="Ingrese nombre, marca o ubicación...">
+                </div>
+                <button onclick="performSimpleSearch()">Buscar</button>
+            </div>
+
+            <div id="multipleSearchSection" style="display: none;">
+                <div class="form-group">
+                    <label for="bulkSearchTerms">Lista de productos (un producto por línea):</label>
+                    <textarea id="bulkSearchTerms" rows="8" placeholder="Ingrese una lista de productos para buscar (uno por línea)"></textarea>
+                </div>
+                <button onclick="performBulkSearch()">Buscar Todos</button>
+            </div>
+
+            <div id="searchResults">
+                <!-- Resultados de búsqueda aquí -->
+            </div>
+        </div>
+        
+        <div id="stats" class="tab-content">
+            <h2>Estadísticas del Inventario</h2>
+            
+            <div class="stats-grid">
+                <div class="stats-card">
+                    <div class="stats-value" id="totalProductos">0</div>
+                    <div class="stats-label">Productos Diferentes</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-value" id="totalUnidades">0</div>
+                    <div class="stats-label">Unidades Totales</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-value" id="totalUbicaciones">0</div>
+                    <div class="stats-label">Ubicaciones Ocupadas</div>
+                </div>
+            </div>
+            
+            <h3>Ocupación por Estantería</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Estantería</th>
+                        <th>Ubicaciones Ocupadas</th>
+                        <th>Productos</th>
+                        <th>Unidades</th>
+                    </tr>
+                </thead>
+                <tbody id="statsTableBody">
+                    <!-- Datos estadísticos -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Detalles de la Ubicación</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalContent">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estructuras de datos
+        const estanterias = {
+            'A': { pisos: 4, columnas: 3 },
+            'B': { pisos: 3, columnas: 3 },
+            'C': { pisos: 3, columnas: 3 },
+            'D': { pisos: 3, columnas: 3 },
+            'E': { pisos: 3, columnas: 3 },
+            'F': { pisos: 3, columnas: 3 },
+            'G': { pisos: 3, columnas: 3 }
+        };
+        
+        // Almacenamiento local para el inventario
+        // Nuevo formato: ubicaciones con arrays de productos
+        let ubicaciones = JSON.parse(localStorage.getItem('ubicaciones')) || {};
+        
+        // Migrar datos antiguos si es necesario
+        function migrarDatosAntiguos() {
+            const inventarioAntiguo = JSON.parse(localStorage.getItem('inventario')) || [];
+            if (inventarioAntiguo.length > 0 && Object.keys(ubicaciones).length === 0) {
+                inventarioAntiguo.forEach(item => {
+                    if (!ubicaciones[item.ubicacion]) {
+                        ubicaciones[item.ubicacion] = {
+                            productos: [],
+                            fechaActualizacion: item.fechaActualizacion || new Date().toLocaleDateString()
+                        };
+                    }
+                    
+                    ubicaciones[item.ubicacion].productos.push({
+                        id: generarId(),
+                        articulo: item.articulo,
+                        marca: item.marca,
+                        cantidad: parseInt(item.cantidad),
+                        fechaEntrada: item.fechaEntrada || new Date().toLocaleDateString()
+                    });
+                });
+                
+                // Guardar los datos migrados
+                localStorage.setItem('ubicaciones', JSON.stringify(ubicaciones));
+                // Opcionalmente, eliminar los datos antiguos
+                localStorage.removeItem('inventario');
+            }
+        }
+        
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Migrar datos antiguos si es necesario
+            migrarDatosAntiguos();
+            
+            // Manejar las pestañas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+            
+            // Manejar los grupos de estanterías
+            document.querySelectorAll('.shelf-selector button').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.shelf-selector button').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const groupId = button.dataset.shelfGroup;
+                    document.querySelectorAll('.warehouse-display').forEach(group => {
+                        group.style.display = 'none';
+                    });
+                    document.getElementById(`shelf-group-${groupId}`).style.display = 'flex';
+                });
+            });
+            
+            // Renderizar las estanterías
+            renderizarEstanterias();
+            
+            // Cargar datos en la tabla
+            actualizarTablaInventario();
+            
+            // Actualizar estadísticas
+            actualizarEstadisticas();
+            
+            // Validación de formulario para agregar producto
+            document.getElementById('addProductForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                agregarProducto();
+            });
+            
+            // Actualizar opciones de piso según la estantería seleccionada
+            document.getElementById('estanteria').addEventListener('change', function() {
+                const estanteria = this.value;
+                const pisoSelect = document.getElementById('piso');
+                const pisoOption4 = pisoSelect.querySelector('option[value="4"]');
+                
+                if (estanteria === 'A') {
+                    pisoOption4.disabled = false;
+                } else {
+                    pisoOption4.disabled = true;
+                    if (pisoSelect.value === '4') {
+                        pisoSelect.value = '3';
+                    }
+                }
+            });
+
+            // Cambiar entre tipos de búsqueda
+            document.getElementById('searchType').addEventListener('change', function() {
+                const searchType = this.value;
+                if (searchType === 'simple') {
+                    document.getElementById('simpleSearchSection').style.display = 'block';
+                    document.getElementById('multipleSearchSection').style.display = 'none';
+                } else {
+                    document.getElementById('simpleSearchSection').style.display = 'none';
+                    document.getElementById('multipleSearchSection').style.display = 'block';
+                }
+            });
+        });
+        
+        // Generar un ID único para cada producto
+        function generarId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+        
+        // Funciones
+        function renderizarEstanterias() {
+            // Generar la visualización de las estanterías
+            for (const [id, config] of Object.entries(estanterias)) {
+                const shelfGrid = document.getElementById(`estanteria-${id.toLowerCase()}`);
+                if (!shelfGrid) continue; // Skip if element doesn't exist
+                
+                shelfGrid.innerHTML = '';
+                
+                // De abajo hacia arriba, de izquierda a derecha
+                for (let piso = config.pisos; piso >= 1; piso--) {
+                    for (let columna = 1; columna <= config.columnas; columna++) {
+                        const ubicacion = `${id}${piso}${columna}`;
+                        const ubicacionData = ubicaciones[ubicacion];
+                        
+                        const locationDiv = document.createElement('div');
+                        locationDiv.dataset.ubicacion = ubicacion;
+                        
+                        if (ubicacionData && ubicacionData.productos.length > 0) {
+                            locationDiv.className = `shelf-location ${ubicacionData.productos.length > 1 ? 'multiple' : 'occupied'}`;
+                            
+                            // Mostrar información resumida
+                            const totalProductos = ubicacionData.productos.length;
+                            const totalUnidades = ubicacionData.productos.reduce((sum, p) => sum + p.cantidad, 0);
+                            
+                            locationDiv.innerHTML = `
+                                <div>${ubicacion}</div>
+                                <div class="small-text">${totalProductos} producto${totalProductos !== 1 ? 's' : ''}</div>
+                                <div class="small-text">${totalUnidades} unidades</div>
+                            `;
+                        } else {
+                            locationDiv.className = 'shelf-location';
+                            locationDiv.innerHTML = `
+                                <div>${ubicacion}</div>
+                                <div class="small-text">Vacío</div>
+                            `;
+                        }
+                        
+                        locationDiv.addEventListener('click', () => {
+                            if (ubicacionData && ubicacionData.productos.length > 0) {
+                                mostrarDetallesUbicacion(ubicacion);
+                            } else {
+                                mostrarFormularioAgregar(ubicacion);
+                            }
+                        });
+                        
+                        shelfGrid.appendChild(locationDiv);
+                    }
+                }
+            }
+        }
+        
+        function actualizarTablaInventario(filtro = '') {
+            const tbody = document.getElementById('inventoryTableBody');
+            tbody.innerHTML = '';
+            
+            let ubicacionesFiltradas = Object.keys(ubicaciones);
+            
+            if (filtro) {
+                const terminoBusqueda = filtro.toLowerCase();
+                ubicacionesFiltradas = ubicacionesFiltradas.filter(ubicacion => {
+                    const ub = ubicaciones[ubicacion];
+                    return ubicacion.toLowerCase().includes(terminoBusqueda) || 
+                           ub.productos.some(p => 
+                               p.articulo.toLowerCase().includes(terminoBusqueda) ||
+                               p.marca.toLowerCase().includes(terminoBusqueda)
+                           );
+                });
+            }
+            
+            if (ubicacionesFiltradas.length === 0) {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `<td colspan="5" style="text-align: center;">No hay productos en el inventario</td>`;
+                tbody.appendChild(fila);
+                return;
+            }
+            
+            // Ordenar por ubicación
+            ubicacionesFiltradas.sort();
+            
+            ubicacionesFiltradas.forEach(ubicacion => {
+                const ubicacionData = ubicaciones[ubicacion];
+                const totalProductos = ubicacionData.productos.length;
+                const totalUnidades = ubicacionData.productos.reduce((sum, p) => sum + p.cantidad, 0);
+                
+                // Preparar texto resumido de artículos
+                let articulosTexto = '';
+                if (totalProductos <= 3) {
+                    articulosTexto = ubicacionData.productos.map(p => `${p.articulo} (${p.marca})`).join(', ');
+                } else {
+                    articulosTexto = `${ubicacionData.productos.slice(0, 2).map(p => `${p.articulo} (${p.marca})`).join(', ')} y ${totalProductos - 2} más`;
+                }
+                
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>${ubicacion}</td>
+                    <td>${articulosTexto}</td>
+                    <td>${totalUnidades}</td>
+                    <td>${ubicacionData.fechaActualizacion}</td>
+                    <td class="actions">
+                        <button class="btn-edit" onclick="mostrarDetallesUbicacion('${ubicacion}')">Ver/Editar</button>
+                        <button class="btn-delete" onclick="confirmarEliminarUbicacion('${ubicacion}')">Vaciar</button>
+                    </td>
+                `;
+                tbody.appendChild(fila);
+            });
+        }
+        
+        function searchInventory() {
+            const searchTerm = document.getElementById('searchInput').value;
+            actualizarTablaInventario(searchTerm);
+        }
+        
+        function performSimpleSearch() {
+            const searchTerm = document.getElementById('simpleSearchTerm').value.trim().toLowerCase();
+            if (!searchTerm) {
+                alert('Por favor ingrese un término de búsqueda');
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '<h3>Resultados de la Búsqueda</h3>';
+            
+            let encontrados = [];
+            
+            // Buscar en todas las ubicaciones
+            Object.keys(ubicaciones).forEach(ubicacion => {
+                const ubicacionData = ubicaciones[ubicacion];
+                
+                ubicacionData.productos.forEach(producto => {
+                    if (producto.articulo.toLowerCase().includes(searchTerm) || 
+                        producto.marca.toLowerCase().includes(searchTerm)) {
+                        encontrados.push({
+                            ubicacion,
+                            producto
+                        });
+                    }
+                });
+            });
+            
+            if (encontrados.length === 0) {
+                resultsDiv.innerHTML += '<p>No se encontraron productos que coincidan con la búsqueda.</p>';
+                return;
+            }
+            
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Artículo</th>
+                        <th>Marca</th>
+                        <th>Cantidad</th>
+                        <th>Ubicación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${encontrados.map(item => `
+                        <tr>
+                            <td>${item.producto.articulo}</td>
+                            <td>${item.producto.marca}</td>
+                            <td>${item.producto.cantidad}</td>
+                            <td>${item.ubicacion}</td>
+                            <td class="actions">
+                                <button class="btn-edit" onclick="mostrarDetallesUbicacion('${item.ubicacion}')">Ver</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            
+            resultsDiv.appendChild(table);
+        }
+        
+        function performBulkSearch() {
+            const searchTerms = document.getElementById('bulkSearchTerms').value.trim();
+            if (!searchTerms) {
+                alert('Por favor ingrese una lista de productos para buscar');
+                return;
+            }
+            
+            const productosBuscar = searchTerms.split('\n').filter(term => term.trim() !== '');
+            if (productosBuscar.length === 0) {
+                alert('No se detectaron términos de búsqueda válidos');
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '<h3>Resultados de Búsqueda Múltiple</h3>';
+            
+            let todosResultados = [];
+            let noEncontrados = [];
+            
+            productosBuscar.forEach(termino => {
+                const terminoBusqueda = termino.trim().toLowerCase();
+                let encontrado = false;
+                
+                // Buscar en todas las ubicaciones
+                Object.keys(ubicaciones).forEach(ubicacion => {
+                    const ubicacionData = ubicaciones[ubicacion];
+                    
+                    ubicacionData.productos.forEach(producto => {
+                        if (producto.articulo.toLowerCase().includes(terminoBusqueda) || 
+                            producto.marca.toLowerCase().includes(terminoBusqueda)) {
+                            todosResultados.push({
+                                terminoBusqueda,
+                                ubicacion,
+                                producto
+                            });
+                            encontrado = true;
+                        }
+                    });
+                });
+                
+                if (!encontrado) {
+                    noEncontrados.push(termino);
+                }
+            });
+            
+            // Mostrar resultados
+            if (todosResultados.length === 0) {
+                resultsDiv.innerHTML += '<p>No se encontraron coincidencias para ninguno de los productos buscados.</p>';
+                return;
+            }
+            
+            // Agrupar por término de búsqueda
+            const resultadosAgrupados = {};
+            todosResultados.forEach(resultado => {
+                if (!resultadosAgrupados[resultado.terminoBusqueda]) {
+                    resultadosAgrupados[resultado.terminoBusqueda] = [];
+                }
+                resultadosAgrupados[resultado.terminoBusqueda].push(resultado);
+            });
+            
+            // Construir HTML para mostrar resultados
+            let resultsHTML = '';
+            
+            // Productos encontrados
+            resultsHTML += '<div class="batch-results">';
+            Object.keys(resultadosAgrupados).forEach(termino => {
+                const resultados = resultadosAgrupados[termino];
+                resultsHTML += `
+                    <div class="product-group">
+                        <h4>Resultados para: "${termino}"</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Artículo</th>
+                                    <th>Marca</th>
+                                    <th>Cantidad</th>
+                                    <th>Ubicación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${resultados.map(item => `
+                                    <tr>
+                                        <td>${item.producto.articulo}</td>
+                                        <td>${item.producto.marca}</td>
+                                        <td>${item.producto.cantidad}</td>
+                                        <td>${item.ubicacion}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+            resultsHTML += '</div>';
+            
+            // Productos no encontrados
+            if (noEncontrados.length > 0) {
+                resultsHTML += `
+                    <div class="not-found">
+                        <h4>Productos no encontrados (${noEncontrados.length}):</h4>
+                        <ul>
+                            ${noEncontrados.map(termino => `<li>${termino}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML += resultsHTML;
+        }
+        
+        function actualizarEstadisticas() {
+            // Calcular estadísticas generales
+            const ubicacionesOcupadas = Object.keys(ubicaciones).length;
+            
+            let totalProductos = 0;
+            let totalUnidades = 0;
+            
+            const estatisticasPorEstanteria = {};
+            for (const id in estanterias) {
+                estatisticasPorEstanteria[id] = {
+                    ubicacionesOcupadas: 0,
+                    productos: 0,
+                    unidades: 0
+                };
+            }
+            
+            // Calcular estadísticas
+            for (const ubicacion in ubicaciones) {
+                const estanteria = ubicacion.charAt(0);
+                const productos = ubicaciones[ubicacion].productos;
+                
+                const numProductos = productos.length;
+                const numUnidades = productos.reduce((sum, p) => sum + parseInt(p.cantidad), 0);
+                
+                totalProductos += numProductos;
+                totalUnidades += numUnidades;
+                
+                if (estatisticasPorEstanteria[estanteria]) {
+                    estatisticasPorEstanteria[estanteria].ubicacionesOcupadas++;
+                    estatisticasPorEstanteria[estanteria].productos += numProductos;
+                    estatisticasPorEstanteria[estanteria].unidades += numUnidades;
+                }
+            }
+            
+            // Actualizar valores en la UI
+            document.getElementById('totalProductos').textContent = totalProductos;
+            document.getElementById('totalUnidades').textContent = totalUnidades;
+            document.getElementById('totalUbicaciones').textContent = ubicacionesOcupadas;
+            
+            // Estadísticas por estantería
+            const statsTableBody = document.getElementById('statsTableBody');
+            statsTableBody.innerHTML = '';
+            
+            for (const [id, stats] of Object.entries(estatisticasPorEstanteria)) {
+                const config = estanterias[id];
+                const capacidad = config.pisos * config.columnas;
+                const porcentaje = (stats.ubicacionesOcupadas / capacidad * 100).toFixed(1);
+                
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>Estantería ${id}</td>
+                    <td>${stats.ubicacionesOcupadas}/${capacidad} (${porcentaje}%)</td>
+                    <td>${stats.productos}</td>
+                    <td>${stats.unidades}</td>
+                `;
+                statsTableBody.appendChild(fila);
+            }
+        }
+        
+        function agregarProducto() {
+            const estanteria = document.getElementById('estanteria').value;
+            const piso = document.getElementById('piso').value;
+            const columna = document.getElementById('columna').value;
+            const articulo = document.getElementById('articulo').value;
+            const marca = document.getElementById('marca').value;
+            const cantidad = parseInt(document.getElementById('cantidad').value);
+            
+            const ubicacion = `${estanteria}${piso}${columna}`;
+            
+            // Crear nuevo producto
+            const nuevoProducto = {
+                id: generarId(),
+                articulo,
+                marca,
+                cantidad,
+                fechaEntrada: new Date().toLocaleDateString()
+            };
+            
+            // Verificar si la ubicación ya existe, si no crearla
+            if (!ubicaciones[ubicacion]) {
+                ubicaciones[ubicacion] = {
+                    productos: [],
+                    fechaActualizacion: new Date().toLocaleDateString()
+                };
+            }
+            
+            // Agregar el producto a la ubicación
+            ubicaciones[ubicacion].productos.push(nuevoProducto);
+            ubicaciones[ubicacion].fechaActualizacion = new Date().toLocaleDateString();
+            
+            // Guardar en localStorage
+            localStorage.setItem('ubicaciones', JSON.stringify(ubicaciones));
+            
+            // Actualizar UI
+            renderizarEstanterias();
+            actualizarTablaInventario();
+            actualizarEstadisticas();
+            
+            // Limpiar formulario
+            document.getElementById('addProductForm').reset();
+            
+            alert(`Producto "${articulo}" agregado correctamente en la ubicación ${ubicacion}`);
+        }
+        
+        function mostrarDetallesUbicacion(ubicacion) {
+            const ubicacionData = ubicaciones[ubicacion];
+            
+            if (!ubicacionData) return;
+            
+            document.getElementById('modalTitle').textContent = `Productos en ${ubicacion}`;
+            
+            let modalContent = `<p>Total de productos: <strong>${ubicacionData.productos.length}</strong></p>`;
+            
+            // Lista de productos
+            modalContent += `<div class="product-list">`;
+            ubicacionData.productos.forEach(producto => {
+                modalContent += `
+                    <div class="product-item" data-product-id="${producto.id}">
+                        <div class="flex-row">
+                            <div style="flex: 3;">
+                                <strong>${producto.articulo}</strong> (${producto.marca})
+                                <div class="small-text">Cantidad: ${producto.cantidad} | Entrada: ${producto.fechaEntrada}</div>
+                            </div>
+                            <div style="flex: 1; text-align: right;">
+                                <button class="btn-edit" onclick="editarProducto('${ubicacion}', '${producto.id}')">Editar</button>
+                                <button class="btn-delete" onclick="eliminarProducto('${ubicacion}', '${producto.id}')">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            modalContent += `</div>`;
+            
+            // Acciones de la ubicación
+            modalContent += `
+                <div style="margin-top: 20px;">
+                    <button class="btn-success" onclick="mostrarFormularioAgregarEnUbicacion('${ubicacion}')">Agregar Producto</button>
+                    <button class="btn-warning" onclick="confirmarEliminarUbicacion('${ubicacion}')">Vaciar Ubicación</button>
+                </div>
+            `;
+            
+            document.getElementById('modalContent').innerHTML = modalContent;
+            mostrarModal();
+        }
+        
+        function mostrarFormularioAgregar(ubicacion) {
+            // Separar la ubicación en sus componentes
+            const estanteria = ubicacion.charAt(0);
+            const piso = ubicacion.charAt(1);
+            const columna = ubicacion.charAt(2);
+            
+            // Actualizar el formulario
+            document.getElementById('estanteria').value = estanteria;
+            document.getElementById('piso').value = piso;
+            document.getElementById('columna').value = columna;
+            
+            // Cambiar a la pestaña de agregar
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector('.tab[data-tab="add"]').classList.add('active');
+            document.getElementById('add').classList.add('active');
+            
+            // Enfocar el campo de artículo
+            document.getElementById('articulo').focus();
+        }
+        
+        function mostrarFormularioAgregarEnUbicacion(ubicacion) {
+            document.getElementById('modalTitle').textContent = `Agregar Producto en ${ubicacion}`;
+            
+            document.getElementById('modalContent').innerHTML = `
+                <form id="addProductInLocationForm">
+                    <div class="form-group">
+                        <label for="modalArticulo">Nombre del Artículo:</label>
+                        <input type="text" id="modalArticulo" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modalMarca">Marca:</label>
+                        <input type="text" id="modalMarca" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modalCantidad">Cantidad:</label>
+                        <input type="number" id="modalCantidad" min="1" value="1" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-success">Agregar Producto</button>
+                </form>
+            `;
+            
+            document.getElementById('addProductInLocationForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const articulo = document.getElementById('modalArticulo').value;
+                const marca = document.getElementById('modalMarca').value;
+                const cantidad = parseInt(document.getElementById('modalCantidad').value);
+                
+                // Crear nuevo producto
+                const nuevoProducto = {
+                    id: generarId(),
+                    articulo,
+                    marca,
+                    cantidad,
+                    fechaEntrada: new Date().toLocaleDateString()
+                };
+                
+                // Verificar si la ubicación ya existe, si no crearla
+                if (!ubicaciones[ubicacion]) {
+                    ubicaciones[ubicacion] = {
+                        productos: [],
+                        fechaActualizacion: new Date().toLocaleDateString()
+                    };
+                }
+                
+                // Agregar el producto a la ubicación
+                ubicaciones[ubicacion].productos.push(nuevoProducto);
+                ubicaciones[ubicacion].fechaActualizacion = new Date().toLocaleDateString();
+                
+                // Guardar en localStorage
+                localStorage.setItem('ubicaciones', JSON.stringify(ubicaciones));
+                
+                // Actualizar UI
+                renderizarEstanterias();
+                actualizarTablaInventario();
+                actualizarEstadisticas();
+                
+                closeModal();
+                alert(`Producto "${articulo}" agregado correctamente en la ubicación ${ubicacion}`);
+            });
+        }
+        
+        function editarProducto(ubicacion, productoId) {
+            const ubicacionData = ubicaciones[ubicacion];
+            if (!ubicacionData) return;
+            
+            const producto = ubicacionData.productos.find(p => p.id === productoId);
+            if (!producto) return;
+            
+            document.getElementById('modalTitle').textContent = `Editar Producto en ${ubicacion}`;
+            
+            document.getElementById('modalContent').innerHTML = `
+                <form id="editProductForm">
+                    <div class="form-group">
+                        <label for="editArticulo">Artículo:</label>
+                        <input type="text" id="editArticulo" value="${producto.articulo}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editMarca">Marca:</label>
+                        <input type="text" id="editMarca" value="${producto.marca}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editCantidad">Cantidad:</label>
+                        <input type="number" id="editCantidad" value="${producto.cantidad}" min="1" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-success">Guardar Cambios</button>
+                </form>
+            `;
+            
+            document.getElementById('editProductForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                producto.articulo = document.getElementById('editArticulo').value;
+                producto.marca = document.getElementById('editMarca').value;
+                producto.cantidad = parseInt(document.getElementById('editCantidad').value);
+                
+                ubicacionData.fechaActualizacion = new Date().toLocaleDateString();
+                
+                // Guardar cambios
+                localStorage.setItem('ubicaciones', JSON.stringify(ubicaciones));
+                
+                // Actualizar UI
+                renderizarEstanterias();
+                actualizarTablaInventario();
+                actualizarEstadisticas();
+                
+                closeModal();
+                alert('Producto actualizado correctamente');
+            });
+        }
+        
+        function eliminarProducto(ubicacion, productoId) {
+            if (confirm('¿Está seguro que desea eliminar este producto?')) {
+                const ubicacionData = ubicaciones[ubicacion];
+                if (!ubicacionData) return;
+                
+                // Encontrar el índice del producto
+                const indice = ubicacionData.productos.findIndex(p => p.id === productoId);
+                if (indice === -1) return;
+                
+                // Eliminar el producto
+                ubicacionData.productos.splice(indice, 1);
+                ubicacionData.fechaActualizacion = new Date().toLocaleDateString();
+                
+                // Si no quedan productos, eliminar la ubicación
+                if (ubicacionData.productos.length === 0) {
+                    delete ubicaciones[ubicacion];
+                }
+                
+                // Guardar cambios
+                localStorage.setItem('ubicaciones', JSON.stringify(ubicaciones));
+                
+                // Actualizar UI
+                renderizarEstanterias();
+                actualizarTablaInventario();
+                actualizarEstadisticas();
+                
+                closeModal();
+                alert('Producto eliminado correctamente');
+            }
+        }
+        
+        function confirmarEliminarUbicacion(ubicacion) {
+            const ubicacionData = ubicaciones[ubicacion];
+            if (!ubicacionData) return;
+            
+            const numProductos = ubicacionData.productos.length;
+            
+            if (confirm(`¿Está seguro que desea eliminar todos los productos (${numProductos}) de la ubicación ${ubicacion}?`)) {
+                delete ubicaciones[ubicacion];
+                
+                // Guardar cambios
+                localStorage.setItem('ubicaciones', JSON.stringify(ubicaciones));
+                
+                // Actualizar UI
+                renderizarEstanterias();
+                actualizarTablaInventario();
+                actualizarEstadisticas();
+                
+                closeModal();
+                alert(`Se han eliminado todos los productos de la ubicación ${ubicacion}`);
+            }
+        }
+        
+        function mostrarModal() {
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
